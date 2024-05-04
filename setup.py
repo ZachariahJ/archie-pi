@@ -117,7 +117,7 @@ do('apt update -y') or sys.exit('Error: Unable to update Raspberry Pi OS.')
 do('apt dist-upgrade -y') or sys.exit('Error: Unable to dist-upgrade Raspberry Pi OS.')
 do('apt -y install lynx') or sys.exit('Error: cannot install lynx dependency')
 do('apt -y install python3-pip') or sys.exit('Error: cannot install pip3 dependency')
-do('pip3 install psutil pycountry xmltodict') or sys.exit('Error: cannot install pip3 dependencies')
+do('pip3 install psutil pycountry xmltodict --break-system-packages') or sys.exit('Error: cannot install pip3 dependencies')
 
 # Set current data and time
 do('apt -y install ntpdate') or sys.exit('Error: cannot install ntpdate')
@@ -134,6 +134,7 @@ do('systemctl stop hostapd') or sys.exit('Error: unable to stop hostapd.')
 do('systemctl stop dnsmasq') or sys.exit('Error: unable to stop dnsmasq.')
 
 # update dhcpd.conf
+do('apt install dhcpcd -y') or sys.exit('Error: unable to install dhcpcd.')
 settings='interface wlan0\nstatic ip_address=10.10.10.10\nnohook wpa_supplicant\n'
 append_file('/etc/dhcpcd.conf', settings)
 do('systemctl restart dhcpcd') or sys.exit('Error: dhcpcd restart failed')
@@ -152,7 +153,8 @@ append_file('/etc/dnsmasq.conf', settings) or sys.exit('Error adding lines to dn
 append_file('/etc/wpa_supplicant/wpa_supplicant.conf',f'country={args.country}') or sys.exit('Error: adding wpa country code')
 
 # update regulatory domain configuration file
-replace_line('REGDOMAIN=',f'REGDOMAIN={args.country}','/etc/default/crda') or sys.exit('Error: crda country update failed')
+# replace_line('REGDOMAIN=',f'REGDOMAIN={args.country}','/etc/default/crda') or sys.exit('Error: crda country update failed')
+do(f'iw reg set {args.country}') or sys.exit('Error: crda country update failed')
 
 # Disable Bluetooth and enable wifi
 # NOTE: wifi should only be enabled when country code is set properly (which it should be here)
